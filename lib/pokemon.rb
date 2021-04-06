@@ -1,41 +1,25 @@
 require 'pry'
 class Pokemon
-  attr_accessor :name, :type, :db
-  attr_reader :id
+  attr_accessor :id, :name, :type, :db
+  # attr_reader
   
-  def initialize(name:, type:, db:, id:)
-    @name = name
-    @type = type
-    @db = db
+  def initialize(hash)
+    @id = hash[:id]
+    @name = hash[:name]
+    @type = hash[:type]
+    @db = hash[:db]
   end
 
   def self.save(name, type, db)
-    @db = db
-    sql = <<-SQL
-    SELECT * FROM pokemon 
-    WHERE name = ?
-    AND type = ?
-    SQL
-    response = db.execute(sql, name, type)[0]
-    if response
-        self.find(response[-1])
-    else
-        sql = <<-SQL
-        CREATE TABLE IF NOT EXISTS pokemon (name TEXT, type TEXT, db TEXT, id INTEGER PRIMARY KEY);
-
-        INSERT INTO pokemon (name, type)
-        VALUES (?, ?);
-        SQL
-        response = db.execute(sql, name, type)[0]
-    end
+    db.execute("INSERT INTO pokemon (name, type) VALUES (?, ?)", name, type)
   end
 
-  def find(id)
+  def self.find(id, db)
     sql = <<-SQL
         SELECT * FROM pokemon WHERE id = ?
         SQL
-    response = @db.execute(sql, id)[0]
-    binding.pry
+    response = db.execute(sql, id)[0]
+    Pokemon.new({:id => response[0],:name => response[1],:type => response[2],:db => db})
 
   end
 
